@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "./ui/button";
 import { SignedIn, UserButton } from "@clerk/nextjs";
 import { FilePlus2 } from "lucide-react";
+import DarkModeToggle from "./DarkModeToggle";
 
 const Header = () => {
   return (
@@ -24,19 +25,25 @@ const Header = () => {
                 <Link href={"/dashboard/upgrade"}>Pricing</Link>
               </Button>
               {/* my documents */}
-              <Button asChild variant="outline" className="bg-transparent">
+              <Button
+                asChild
+                variant="outline"
+                className="hidden md:flex bg-transparent"
+              >
                 <Link href="/dashboard">My Documents</Link>
               </Button>
               {/* create new document */}
               <Button
                 asChild
                 variant="outline"
-                className="bg-transparent border-primary"
+                className="bg-transparent border-primary hidden md:flex"
               >
                 <Link href="/dashboard/upload">
                   <FilePlus2 />
                 </Link>
               </Button>
+              {/* dark mode */}
+              <DarkModeToggle />
               {/* current account status - pro vs free */}
               {/* TO DO */}
 
