@@ -2,20 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* body {
+  font-family: Arial, Helvetica, sans-serif;
+} */
 
-@media (prefers-color-scheme: dark) {
+/* generated with https://zippystarter.com/tools/shadcn-ui-theme-generator */
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 262 100% 100%;
+    --foreground: 262 5% 10%;
+    --card: 262 50% 100%;
+    --card-foreground: 262 5% 15%;
+    --popover: 262 100% 100%;
+    --popover-foreground: 262 100% 10%;
+    --primary: 262 100% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 262 30% 90%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 224 30% 95%;
+    --muted-foreground: 262 5% 40%;
+    --accent: 224 30% 90%;
+    --accent-foreground: 262 5% 15%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 262 5% 100%;
+    --border: 262 30% 82%;
+    --input: 262 30% 50%;
+    --ring: 262 100% 52%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 262 50% 10%;
+    --foreground: 262 5% 100%;
+    --card: 262 50% 10%;
+    --card-foreground: 262 5% 100%;
+    --popover: 262 50% 5%;
+    --popover-foreground: 262 5% 100%;
+    --primary: 262 100% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 262 30% 20%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 224 30% 25%;
+    --muted-foreground: 262 5% 65%;
+    --accent: 224 30% 25%;
+    --accent-foreground: 262 5% 95%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 262 5% 100%;
+    --border: 262 30% 50%;
+    --input: 262 30% 50%;
+    --ring: 262 100% 52%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
