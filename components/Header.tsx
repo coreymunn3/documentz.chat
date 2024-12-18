@@ -8,7 +8,7 @@ import DarkModeToggle from "./DarkModeToggle";
 
 const Header = () => {
   return (
-    <div className="p-4 border-b border-b-slate-200 bg-slate-50">
+    <div className="p-4 border-b border-b-slate-200 bg-slate-50 dark:border-b-slate-700 dark:bg-primary/5">
       <div className="flex justify-between mx-auto max-w-6xl">
         <Link href="/dashboard">
           <p className="text-2xl font-light">
@@ -21,13 +21,17 @@ const Header = () => {
           <SignedIn>
             <div className="flex gap-2 items-center">
               {/* pricing */}
-              <Button asChild variant="link" className="hidden md:flex">
+              <Button
+                asChild
+                variant="link"
+                className="hidden md:flex dark:text-white"
+              >
                 <Link href={"/dashboard/upgrade"}>Pricing</Link>
               </Button>
               {/* my documents */}
               <Button
                 asChild
-                variant="outline"
+                variant="ghost"
                 className="hidden md:flex bg-transparent"
               >
                 <Link href="/dashboard">My Documents</Link>
@@ -35,7 +39,7 @@ const Header = () => {
               {/* create new document */}
               <Button
                 asChild
-                variant="outline"
+                variant="ghost"
                 className="bg-transparent border-primary hidden md:flex"
               >
                 <Link href="/dashboard/upload">
