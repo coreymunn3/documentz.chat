@@ -29,7 +29,7 @@ const Documents = () => {
       {placeholderDocuments.map((doc) => (
         <Button
           variant="ghost"
-          className="w-64 h-80 rounded-xl bg-white drop-shadow-md flex flex-col items-start justify-between mr-2 mb-2 hover:bg-slate-100"
+          className="w-64 h-80 rounded-xl drop-shadow-md flex flex-col items-start justify-between mr-2 mb-2  bg-white hover:bg-slate-100 dark:bg-slate-800 hover:dark:bg-slate-700"
         >
           <div className="text-left">
             <p className="">{doc.filename}</p>
@@ -37,14 +37,11 @@ const Documents = () => {
           </div>
           <div className="flex flex-row space-x-2 w-full justify-end">
             {/* download */}
-            <Button variant="outline">
+            <Button variant="ghost">
               <DownloadCloudIcon />
             </Button>
             {/* delete */}
-            <Button
-              variant="outline"
-              className="border border-destructive text-destructive"
-            >
+            <Button variant="ghost" className="text-destructive">
               <Trash2 />
             </Button>
           </div>
@@ -52,7 +49,7 @@ const Documents = () => {
       ))}
       {/* render the add document button */}
       <Button
-        className="flex flex-col items-center justify-center w-64 h-80 rounded-xl bg-slate-200 drop-shadow-md text-slate-400 hover:text-white"
+        className="flex flex-col items-center justify-center w-64 h-80 rounded-xl drop-shadow-md text-slate-400 bg-slate-200 hover:text-white dark:bg-slate-700 hover:dark:bg-slate-600"
         onClick={handleAddDocument}
       >
         <PlusCircleIcon className="h-16 w-16" />
