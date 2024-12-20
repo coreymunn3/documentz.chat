@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 import { Button } from "./ui/button";
 import { DownloadCloudIcon, PlusCircleIcon, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 
 const placeholderDocuments = [
   {
@@ -17,6 +18,8 @@ const placeholderDocuments = [
 
 const Documents = () => {
   const router = useRouter();
+  const user = useUser();
+  console.log(user);
 
   const handleAddDocument = () => {
     // eventually, check if user is free tier, if they are over file limit, push to upgrade screen
@@ -28,6 +31,7 @@ const Documents = () => {
       {/* render out the documents */}
       {placeholderDocuments.map((doc) => (
         <Button
+          key={doc.filename}
           variant="ghost"
           className="w-64 h-80 rounded-xl drop-shadow-md flex flex-col items-start justify-between mr-2 mb-2  bg-white hover:bg-slate-100 dark:bg-slate-800 hover:dark:bg-slate-700"
         >
