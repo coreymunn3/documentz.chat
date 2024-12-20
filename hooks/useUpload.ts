@@ -7,6 +7,7 @@ import { v4 as uuidV4 } from "uuid";
 import { db, storage } from "@/firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { doc, setDoc } from "firebase/firestore";
+import { generateEmbeddings } from "@/actions/generateEmbedding";
 
 export enum StatusText {
   UPLOADING = "Uploading file...",
@@ -21,6 +22,11 @@ const useUpload = () => {
   const [progress, setProgress] = useState<number | null>(null);
   const [fileId, setFileId] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<{
+    message: string;
+    uploadProgress: number;
+    error: any;
+  } | null>(null);
   const { user } = useUser();
   const router = useRouter();
 
@@ -46,31 +52,51 @@ const useUpload = () => {
       // on error
       (error) => {
         console.error("Error encountered uploading file", error);
+        setError({ message: "Error uploading file", uploadProgress: 0, error });
       },
       // on complete
       async () => {
         // first get the download URL
         setStatus(StatusText.UPLOADED);
         const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+
         // save the file location in the firestore database
         setStatus(StatusText.SAVING);
-        await setDoc(doc(db, "users", user.id, "files", fileId), {
-          name: file.name,
-          size: file.size,
-          downloadUrl,
-          ref: uploadTask.snapshot.ref.fullPath,
-          createdAt: new Date(),
-        });
+        try {
+          await setDoc(doc(db, "users", user.id, "files", fileId), {
+            name: file.name,
+            size: file.size,
+            downloadUrl,
+            ref: uploadTask.snapshot.ref.fullPath,
+            createdAt: new Date(),
+          });
+        } catch (error) {
+          setError({
+            message: "Error saving file metadata in firesstore",
+            uploadProgress: 0,
+            error,
+          });
+        }
+
         // generate AI embeddings
         setStatus(StatusText.GENERATING);
-        // TODO
+        try {
+          await generateEmbeddings(fileId);
+        } catch (error) {
+          setError({
+            message:
+              "Error generating vector embeddings. You will be able to view and read this document, but AI functionality has been disabled.",
+            uploadProgress: 100,
+            error,
+          });
+        }
 
         setFileId(fileId);
       }
     );
   };
 
-  return { progress, status, fileId, handleUpload };
+  return { progress, status, fileId, error, handleUpload };
 };
 
 export default useUpload;

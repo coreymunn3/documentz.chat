@@ -5,20 +5,24 @@ import { useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Progress } from "./ui/progress";
+import { toast } from "sonner";
 
 const FileUploader = () => {
   const router = useRouter();
   const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   // run this when the upload completes
-  const { progress, status, fileId, handleUpload } = useUpload();
-  console.log(status);
+  const { progress, status, fileId, error, handleUpload } = useUpload();
   // when the file upload is complete, and we have a fileId, push the user to that page
   useEffect(() => {
     if (fileId) {
       router.push(`/dashboard/files/${fileId}`);
     }
-  }, [fileId]);
+    if (error) {
+      setUploadProgress(error.uploadProgress);
+      toast.error(`${error.message}`);
+    }
+  }, [fileId, error]);
 
   // determinant progress simulation
   const startSimulateProgress = () => {
