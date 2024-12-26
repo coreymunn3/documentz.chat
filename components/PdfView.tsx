@@ -5,7 +5,8 @@ import "react-pdf/dist/Page/TextLayer.css";
 import { Document, Page, pdfjs } from "react-pdf";
 import { Fragment, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2Icon } from "lucide-react";
+import { Loader2Icon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
+import { Button } from "./ui/button";
 
 // configure CORS
 // gsutil cors set cors.json gs://documentz-chat.firebasestorage.app
@@ -53,7 +54,57 @@ const PdfView = ({ url }: { url: string }) => {
   }
 
   return (
-    <div>
+    <div className="flex flex-col justify-center items-center">
+      <div className="sticky top-0 bg-slate-100 p-4 rounded-b-lg z-10 w-full">
+        <div className="flex space-x-2 items-center max-w-xl mx-auto">
+          <Button
+            variant={"outline"}
+            disabled={pageNumber === 1}
+            onClick={() => setPageNumber((prev) => prev - 1)}
+          >
+            Previous
+          </Button>
+
+          <p className="text-slate-500">
+            Page {pageNumber} of {numPages}
+          </p>
+
+          <Button
+            variant={"outline"}
+            disabled={pageNumber === numPages}
+            onClick={() => setPageNumber((prev) => prev + 1)}
+          >
+            Next
+          </Button>
+
+          <div className="mr-4" />
+
+          <Button
+            variant={"outline"}
+            onClick={() => setRotation((prev) => (prev + 90) % 360)}
+          >
+            Rotate
+          </Button>
+
+          <div className="mr-4" />
+
+          <Button
+            variant={"outline"}
+            disabled={scale >= 1.5}
+            onClick={() => setScale((prev) => prev * 1.2)}
+          >
+            <ZoomInIcon />
+          </Button>
+
+          <Button
+            variant={"outline"}
+            disabled={scale <= 0.5}
+            onClick={() => setScale((prev) => prev / 1.2)}
+          >
+            <ZoomOutIcon />
+          </Button>
+        </div>
+      </div>
       {fileLoading && !file ? (
         <Loader2Icon className="animate-spin h-20 w-20 text-primary mt-20" />
       ) : (
@@ -67,9 +118,6 @@ const PdfView = ({ url }: { url: string }) => {
           >
             <Page pageNumber={pageNumber} scale={scale} />
           </Document>
-          <p>
-            Page {pageNumber} of {numPages}
-          </p>
         </Fragment>
       )}
     </div>
