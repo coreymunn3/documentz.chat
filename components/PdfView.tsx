@@ -86,8 +86,6 @@ const PdfView = ({ url }: { url: string }) => {
             Rotate
           </Button>
 
-          <div className="mr-4" />
-
           <Button
             variant={"outline"}
             disabled={scale >= 1.5}

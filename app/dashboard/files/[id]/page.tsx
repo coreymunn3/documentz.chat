@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { adminDb } from "@/firebase-admin";
 import PdfView from "@/components/PdfView";
+import Chat from "@/components/Chat";
 
 const FilesPage = async ({
   params: { id: fileId },
@@ -22,7 +23,9 @@ const FilesPage = async ({
   return (
     <div className="grid lg:grid-cols-5 h-full overflow-hidden">
       {/* right - chat */}
-      <div className="px-2 col-span-5 lg:col-span-2 overflow-y-auto"></div>
+      <div className="col-span-5 lg:col-span-2 overflow-y-auto">
+        <Chat id={fileId} />
+      </div>
 
       {/* left - view of PDF file */}
       <div className="px-2 col-span-5 lg:col-span-3 overflow-y-auto bg-slate-50 border-r-2 lg:border-primary lg:-order-1">
