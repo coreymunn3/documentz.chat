@@ -1,19 +1,29 @@
-import { auth } from "@clerk/nextjs/server";
 // langchain deps
 import { ChatOpenAI } from "@langchain/openai";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 import { createRetrievalChain } from "langchain/chains/retrieval";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createHistoryAwareRetriever } from "langchain/chains/history_aware_retriever";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import { contextualizedQuestionPrompt, qaPrompt } from "./promptTemplates";
+// ai sdk
+// import { streamText, LangChainAdapter } from "ai";
 // utils
 import { getChatHistory } from "./firebaseUtils";
 import { DocumentData } from "firebase/firestore";
-import { embedAndStoreDocs } from "./vectorStore";
+import { getExistingVectorStore } from "./vectorStore";
 
+/**
+ * create our models
+ */
 export const model = new ChatOpenAI({
   model: "gpt-4o-mini",
   temperature: 0,
+});
+
+export const streamingModel = new ChatOpenAI({
+  model: "gpt-4o-mini",
+  temperature: 0,
+  streaming: true,
 });
 
 function langchainFormattedChatHistory(chatHistory: DocumentData[]) {
@@ -29,11 +39,11 @@ export async function generateLangchainCompletion(
   docId: string,
   question: string
 ) {
-  const pineconeVectorStore = await embedAndStoreDocs(docId);
-  console.log(pineconeVectorStore);
+  const pineconeVectorStore = await getExistingVectorStore(docId);
   if (!pineconeVectorStore) {
-    throw new Error("Pinecone vectore store not found!");
+    throw new Error("Pinecone vectore store not found");
   }
+  const sanitizedQuestion = question.trim().replaceAll("\n", " ");
 
   // creating a retriever to search through the vector store
   console.log("--Creating a Retriever--");
@@ -45,55 +55,33 @@ export async function generateLangchainCompletion(
   console.log("--Converting Chat Histoy into Langchain Format--");
   const chatHistoryForLangchain = langchainFormattedChatHistory(chatHistory);
 
-  // define a prompt template
-  console.log("--Defining a prompt template for asking questions--");
-  const historyAwarePrompt = ChatPromptTemplate.fromMessages([
-    ...chatHistoryForLangchain, // the actual chat history
-    ["user", "{input}"],
-    [
-      "user",
-      "given the above conversation, generate a search query to look up in order to get information relevant to the conversation",
-    ],
-  ]);
-
-  // create a history-aware retriever chain that users model, retriever, and prompt
+  // create a history-aware retriever chain that can rephrase the prompt into a meaningful standalone question and use message history as context
   console.log("--Creating a History-aware retriever chain--");
   const historyAwareRetrieverChain = await createHistoryAwareRetriever({
     llm: model,
     retriever,
-    rephrasePrompt: historyAwarePrompt,
+    rephrasePrompt: contextualizedQuestionPrompt,
   });
-
-  // define a prompt template for answering questions based on retrieved context
-  console.log("--Defining a prompt templte for Answering questions ");
-  const historyAwareRetrieverPrompt = ChatPromptTemplate.fromMessages([
-    [
-      "system",
-      "Answer the user's questions based on the below context:\n\n{context}",
-    ],
-    ...chatHistoryForLangchain,
-    ["user", "{input}"],
-  ]);
 
   // create a chain to combine the retrieved documents into a conherent response
   console.log("--Creating a document combining chain--");
-  const historyAwareCombineDocsChain = await createStuffDocumentsChain({
+  const combineDocsChain = await createStuffDocumentsChain({
     llm: model,
-    prompt: historyAwareRetrieverPrompt,
+    prompt: qaPrompt,
   });
 
   // create the main retrieval chain that combines history-aware retriever and document combining chains
-  console.log("creating the main retrieval chain");
-  const conversationalRetrievalChain = await createRetrievalChain({
+  console.log("creating the main RAG chain");
+  const ragChain = await createRetrievalChain({
     retriever: historyAwareRetrieverChain,
-    combineDocsChain: historyAwareCombineDocsChain,
+    combineDocsChain: combineDocsChain,
   });
 
   // invoke the chain
   console.log("--Running the chain with a conversation--");
-  const reply = await conversationalRetrievalChain.invoke({
+  const reply = await ragChain.invoke({
     chat_history: chatHistoryForLangchain,
-    input: question,
+    input: sanitizedQuestion,
   });
 
   console.log(reply);

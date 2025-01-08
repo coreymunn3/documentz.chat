@@ -15,6 +15,7 @@ export async function getChunkedDocsFromPdf(documentBlob: Blob) {
 
     console.log("--Splitting the document into smaller parts--");
     const splitter = new RecursiveCharacterTextSplitter({
+      // default settings
       chunkSize: 1000,
       chunkOverlap: 200,
     });

@@ -14,9 +14,27 @@ async function namespaceExists(
   return namespaces?.[namespace] !== undefined;
 }
 
+export async function getExistingVectorStore(docId: string) {
+  const pineconeIndex = pc.index(process.env.PINECONE_INDEX_NAME!);
+  const embeddings = new OpenAIEmbeddings();
+  try {
+    const pineconeVectorStore = await PineconeStore.fromExistingIndex(
+      embeddings,
+      {
+        pineconeIndex,
+        namespace: docId,
+        textKey: "text",
+      }
+    );
+    return pineconeVectorStore;
+  } catch (error) {
+    console.log("error ", error);
+    throw new Error("Failed to load vector store");
+  }
+}
+
 export async function embedAndStoreDocs(docId: string) {
   try {
-    // embeddings setup
     console.log("--- Generating Embeddings for the split documents---");
     const pineconeIndex = pc.index(process.env.PINECONE_INDEX_NAME!);
     const embeddings = new OpenAIEmbeddings();
@@ -31,13 +49,7 @@ export async function embedAndStoreDocs(docId: string) {
     const namespaceAlreadyExists = await namespaceExists(pineconeIndex, docId);
     // if the namespace exists, retrieve the existing vector store
     if (namespaceAlreadyExists) {
-      console.log(
-        `-- Namespace ${docId} already exists, reusing vector embeddings-- `
-      );
-      pineconeVectorStore = await PineconeStore.fromExistingIndex(embeddings, {
-        pineconeIndex,
-        namespace: docId,
-      });
+      pineconeVectorStore = await getExistingVectorStore(docId);
       return pineconeVectorStore;
       /**
        * If new namespace:
@@ -60,10 +72,16 @@ export async function embedAndStoreDocs(docId: string) {
         {
           pineconeIndex: pineconeIndex,
           namespace: docId,
+          textKey: "text",
         }
       );
 
       return pineconeVectorStore;
     }
-  } catch (error) {}
+  } catch (error) {
+    console.error(error);
+    throw new Error(
+      "Error encountered when generating vector embeddings and storing in Pinecone"
+    );
+  }
 }
