@@ -2,11 +2,24 @@
 
 import { Message } from "@/types/types";
 import { useUser } from "@clerk/nextjs";
-import { BotIcon, Loader2Icon } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 import Image from "next/image";
 import Markdown from "react-markdown";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./ui/accordion";
+import { formattedSourceText } from "@/lib/utils";
 
-const ChatMessage = ({ message }: { message: Message }) => {
+const ChatMessage = ({
+  message,
+  sources,
+}: {
+  message: Message;
+  sources: string[];
+}) => {
   const { user } = useUser();
   const isHuman = message.role === "human";
 
@@ -45,7 +58,20 @@ const ChatMessage = ({ message }: { message: Message }) => {
             <Loader2Icon className="animate-spin h-5 w-5 text-white" />
           </div>
         ) : (
-          <Markdown>{message.message}</Markdown>
+          <div>
+            <Markdown>{message.message}</Markdown>
+            <Accordion type="single" collapsible className="w-full">
+              {sources.length > 0 &&
+                sources.map((source, index) => (
+                  <AccordionItem value={`source-${index}`} key={index}>
+                    <AccordionTrigger>{`Source ${index + 1}`}</AccordionTrigger>
+                    <AccordionContent>
+                      <Markdown>{formattedSourceText(source)}</Markdown>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+            </Accordion>
+          </div>
         )}
       </div>
     </div>

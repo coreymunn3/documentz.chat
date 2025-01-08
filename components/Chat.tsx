@@ -17,7 +17,7 @@ const Chat = ({ id }: { id: string }) => {
 
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  console.log("messages", messages);
+  const sources = ["I am source 1", "I am source 2"];
   const [isPending, startTransition] = useTransition();
   const bottomChatRef = useRef<HTMLDivElement>(null);
 
@@ -29,9 +29,11 @@ const Chat = ({ id }: { id: string }) => {
       )
   );
 
+  /**
+   * This useEffect formats every new message, unpacking the role, message and createdAt and combining with the ID
+   */
   useEffect(() => {
     if (!snapshot) return;
-    console.log("updated snapshot", snapshot.docs);
     // if the ai not thinking, remove the 'ai is thinking' placeholder
     const lastMessage = messages.pop();
     if (lastMessage?.role === "ai" && lastMessage.message === "Thinking...") {
@@ -59,6 +61,10 @@ const Chat = ({ id }: { id: string }) => {
     }
   }, [messages]);
 
+  /**
+   * This function runs whenever the user enters and submits a new chat
+   * It optimistically updates the UI with a "thinking" message then attempts to ask the question
+   */
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const q = input;
@@ -116,11 +122,16 @@ const Chat = ({ id }: { id: string }) => {
                     message: "Ask me Anything about the document!",
                     createdAt: new Date(),
                   }}
+                  sources={[]}
                 />
               )}
               {messages.length > 0 &&
                 messages.map((message) => (
-                  <ChatMessage key={message.id} message={message} />
+                  <ChatMessage
+                    key={message.id}
+                    message={message}
+                    sources={message.role == "ai" ? sources : []}
+                  />
                 ))}
             </div>
             <div ref={bottomChatRef} />
