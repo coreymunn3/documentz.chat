@@ -16,8 +16,7 @@ export const contextualizedQuestionPrompt = ChatPromptTemplate.fromMessages([
 
 // Actual question you ask the chat and send the response to client
 const SYSTEM_PROMPT = `You are an enthusiastic AI assistant. Use the following pieces of context to answer the question at the end.
-If you don't know the answer, just say you don't know. DO NOT try to make up an answer. 
-Keep the answer to three sentences maximum unless the user asks for a longer explanation.
+If you don't know the answer, just say you don't know. DO NOT try to make up an answer.
 
 {context}`;
 

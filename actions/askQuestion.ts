@@ -43,7 +43,7 @@ export async function askQuestion(id: string, question: string) {
   const aiMessage: Message = {
     role: "ai",
     message: reply.answer,
-    sources: reply.context.map((c) => c.pageContent),
+    sources: reply.context.slice(0, 2).map((c) => c.pageContent),
     createdAt: new Date(),
   };
 

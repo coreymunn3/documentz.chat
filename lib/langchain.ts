@@ -20,12 +20,6 @@ export const model = new ChatOpenAI({
   temperature: 0,
 });
 
-export const streamingModel = new ChatOpenAI({
-  model: "gpt-4o-mini",
-  temperature: 0,
-  streaming: true,
-});
-
 function langchainFormattedChatHistory(chatHistory: DocumentData[]) {
   const chatHistoryForLangchain = chatHistory.map((chat) =>
     chat.role === "human"
@@ -83,8 +77,6 @@ export async function generateLangchainCompletion(
     chat_history: chatHistoryForLangchain,
     input: sanitizedQuestion,
   });
-
   console.log(reply);
-
   return reply;
 }
