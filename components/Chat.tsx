@@ -17,7 +17,6 @@ const Chat = ({ id }: { id: string }) => {
 
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const sources = ["I am source 1", "I am source 2"];
   const [isPending, startTransition] = useTransition();
   const bottomChatRef = useRef<HTMLDivElement>(null);
 
@@ -40,11 +39,12 @@ const Chat = ({ id }: { id: string }) => {
       return;
     }
     const newMessages = snapshot.docs.map((doc) => {
-      const { role, message, createdAt } = doc.data();
+      const { role, message, sources, createdAt } = doc.data();
       return {
         id: doc.id,
         role,
         message,
+        sources,
         createdAt,
       };
     });
@@ -75,11 +75,13 @@ const Chat = ({ id }: { id: string }) => {
       {
         role: "human",
         message: q,
+        sources: null,
         createdAt: new Date(),
       },
       {
         role: "ai",
         message: "Thinking...",
+        sources: null,
         createdAt: new Date(),
       },
     ]);
@@ -95,6 +97,7 @@ const Chat = ({ id }: { id: string }) => {
             {
               role: "ai",
               message: "Whoops! An error occurred." + message,
+              sources: [],
               createdAt: new Date(),
             },
           ])
@@ -120,18 +123,14 @@ const Chat = ({ id }: { id: string }) => {
                     id: "test",
                     role: "ai",
                     message: "Ask me Anything about the document!",
+                    sources: null,
                     createdAt: new Date(),
                   }}
-                  sources={[]}
                 />
               )}
               {messages.length > 0 &&
                 messages.map((message) => (
-                  <ChatMessage
-                    key={message.id}
-                    message={message}
-                    sources={message.role == "ai" ? sources : []}
-                  />
+                  <ChatMessage key={message.id} message={message} />
                 ))}
             </div>
             <div ref={bottomChatRef} />

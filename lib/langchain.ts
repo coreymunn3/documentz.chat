@@ -86,5 +86,5 @@ export async function generateLangchainCompletion(
 
   console.log(reply);
 
-  return reply.answer;
+  return reply;
 }

@@ -31,6 +31,7 @@ export async function askQuestion(id: string, question: string) {
   const userMessage: Message = {
     role: "human",
     message: question,
+    sources: null,
     createdAt: new Date(),
   };
 
@@ -41,7 +42,8 @@ export async function askQuestion(id: string, question: string) {
   const reply = await generateLangchainCompletion(id, question);
   const aiMessage: Message = {
     role: "ai",
-    message: reply,
+    message: reply.answer,
+    sources: reply.context.map((c) => c.pageContent),
     createdAt: new Date(),
   };
 

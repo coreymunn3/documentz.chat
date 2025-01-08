@@ -13,13 +13,7 @@ import {
 } from "./ui/accordion";
 import { formattedSourceText } from "@/lib/utils";
 
-const ChatMessage = ({
-  message,
-  sources,
-}: {
-  message: Message;
-  sources: string[];
-}) => {
+const ChatMessage = ({ message }: { message: Message }) => {
   const { user } = useUser();
   const isHuman = message.role === "human";
 
@@ -60,9 +54,10 @@ const ChatMessage = ({
         ) : (
           <div>
             <Markdown>{message.message}</Markdown>
+            {/* If there are sources, show them to the user for quick reference */}
             <Accordion type="single" collapsible className="w-full">
-              {sources.length > 0 &&
-                sources.map((source, index) => (
+              {message.sources &&
+                message.sources.map((source, index) => (
                   <AccordionItem value={`source-${index}`} key={index}>
                     <AccordionTrigger>{`Source ${index + 1}`}</AccordionTrigger>
                     <AccordionContent>
