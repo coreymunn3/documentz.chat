@@ -15,13 +15,13 @@ import pc from "./pinecone";
 import { PineconeStore } from "@langchain/pinecone";
 import { PineconeConflictError } from "@pinecone-database/pinecone/dist/errors";
 import { Index, RecordMetadata } from "@pinecone-database/pinecone";
+import { getChatHistory, getPdfContent } from "./firebaseUtils";
+import { DocumentData } from "firebase/firestore";
 
 export const model = new ChatOpenAI({
   model: "gpt-4o-mini",
   temperature: 0,
 });
-
-const indexName = "pdf";
 
 async function namespaceExists(
   index: Index<RecordMetadata>,
@@ -32,58 +32,39 @@ async function namespaceExists(
   return namespaces?.[namespace] !== undefined;
 }
 
-async function fetchMessagesFromDb(docId: string) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("User ID not found");
-  // get messages
-  const chatRef = adminDb
-    .collection("users")
-    .doc(userId)
-    .collection("files")
-    .doc(docId)
-    .collection("chat");
-  const chatMessages = await chatRef.get();
-  // converto to langchain format
-  const chatHistoryForLangchain = chatMessages.docs.map((doc) => {
-    return doc.data().role === "human"
-      ? new HumanMessage(doc.data().message)
-      : new AIMessage(doc.data().message);
-  });
+function langchainFormattedChatHistory(chatHistory: DocumentData[]) {
+  const chatHistoryForLangchain = chatHistory.map((chat) =>
+    chat.role === "human"
+      ? new HumanMessage(chat.message)
+      : new AIMessage(chat.message)
+  );
   return chatHistoryForLangchain;
 }
 
-export async function generateDocs(docId: string) {
+export async function getChunkedDocsFromPdf(documentBlob: Blob) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("User Not Found - please log in to continue");
   }
 
-  console.log("--Fetching download URL from Firebase--");
-  const firebaesRef = await adminDb
-    .collection("users")
-    .doc(userId)
-    .collection("files")
-    .doc(docId)
-    .get();
-  const downloadUrl = firebaesRef.data()?.downloadUrl;
-  console.log("download url", downloadUrl);
+  try {
+    const loader = new PDFLoader(documentBlob);
+    const doc = await loader.load();
+    console.log("docs", doc);
 
-  if (!downloadUrl) throw new Error(`download URL not found for doc ${docId}`);
-  console.log("--Download URL found, Loadign PDF--");
-
-  const response = await fetch(downloadUrl);
-  const dataBlob = await response.blob();
-  const loader = new PDFLoader(dataBlob);
-  const docs = await loader.load();
-  console.log("docs", docs);
-
-  console.log("--Splitting the document into smaller parts--");
-  const splitter = new RecursiveCharacterTextSplitter();
-  const splitDocs = await splitter.splitDocuments(docs);
-  console.log("split docs ", splitDocs);
-  console.log(`--Split document into ${splitDocs.length} parts--`);
-
-  return splitDocs;
+    console.log("--Splitting the document into smaller parts--");
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 1000,
+      chunkOverlap: 200,
+    });
+    const chunkDocs = await splitter.splitDocuments(doc);
+    console.log("split docs ", chunkDocs);
+    console.log(`--Split document into ${chunkDocs.length} parts--`);
+    return chunkDocs;
+  } catch (error) {
+    console.error(error);
+    throw new Error("PDF docs chunking failed");
+  }
 }
 
 export async function generateEmbeddingsInPineconeVectorStore(docId: string) {
@@ -96,7 +77,7 @@ export async function generateEmbeddingsInPineconeVectorStore(docId: string) {
 
   // embeddings setup
   console.log("--- Generating Embeddings for the split documents---");
-  const pineconeIndex = pc.index(indexName);
+  const pineconeIndex = pc.index(process.env.PINECONE_INDEX_NAME!);
   const embeddings = new OpenAIEmbeddings();
 
   /**
@@ -123,11 +104,13 @@ export async function generateEmbeddingsInPineconeVectorStore(docId: string) {
      * 3. generate vector embeddings & store them in the Pinecone vector store
      */
   } else {
-    // download, parse, and split the documents (1 & 2)
-    const splitDocs = await generateDocs(docId);
+    // download the document,
+    const downloadedPdf = await getPdfContent(docId);
+    // parse, and split the documents (1 & 2)
+    const splitDocs = await getChunkedDocsFromPdf(downloadedPdf);
     // generate and store embeddings (3)
     console.log(
-      `--Storing the embeddings in namespace ${docId} in the ${indexName} Pinecone vector store--`
+      `--Storing the embeddings in namespace ${docId} in the ${process.env.PINECONE_INDEX_NAME} Pinecone vector store--`
     );
     pineconeVectorStore = await PineconeStore.fromDocuments(
       splitDocs,
@@ -160,12 +143,14 @@ export async function generateLangchainCompletion(
 
   // fetching chat history
   console.log("--Fetching Chat History--");
-  const chatHistory = await fetchMessagesFromDb(docId);
+  const chatHistory = await getChatHistory(docId);
+  console.log("--Converting Chat Histoy into Langchain Format--");
+  const chatHistoryForLangchain = langchainFormattedChatHistory(chatHistory);
 
   // define a prompt template
   console.log("--Defining a prompt template for asking questions--");
   const historyAwarePrompt = ChatPromptTemplate.fromMessages([
-    ...chatHistory, // the actual chat history
+    ...chatHistoryForLangchain, // the actual chat history
     ["user", "{input}"],
     [
       "user",
@@ -188,7 +173,7 @@ export async function generateLangchainCompletion(
       "system",
       "Answer the user's questions based on the below context:\n\n{context}",
     ],
-    ...chatHistory,
+    ...chatHistoryForLangchain,
     ["user", "{input}"],
   ]);
 
@@ -209,7 +194,7 @@ export async function generateLangchainCompletion(
   // invoke the chain
   console.log("--Running the chain with a conversation--");
   const reply = await conversationalRetrievalChain.invoke({
-    chat_history: chatHistory,
+    chat_history: chatHistoryForLangchain,
     input: question,
   });
 
