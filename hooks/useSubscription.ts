@@ -33,7 +33,6 @@ function useSubscription() {
     if (!userSnapshot) return;
 
     const data = userSnapshot.data();
-    console.log("user data", data);
     // if data is undefined or empty obj, that means the user collection has no user document, though it may have files, etc
     // set the user document to the default plan = starter
     if (!data || Object.keys(data).length === 0) {
