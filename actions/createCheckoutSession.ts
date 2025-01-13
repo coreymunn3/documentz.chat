@@ -46,7 +46,7 @@ export async function createCheckoutSession(userDetails: UserDetails) {
     automatic_tax: {
       enabled: false,
     },
-    success_url: `${getBaseUrl()}/dashboard/upgrade=true`,
+    success_url: `${getBaseUrl()}/dashboard?upgrade=true`,
     cancel_url: `${getBaseUrl()}/upgrade`,
   });
 
