@@ -7,3 +7,8 @@ export type Message = {
   sources: string[] | null;
   createdAt: Date;
 };
+
+export type UserDetails = {
+  email: string;
+  name: string;
+};
