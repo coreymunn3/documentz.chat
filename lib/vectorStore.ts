@@ -5,6 +5,12 @@ import { Index, RecordMetadata } from "@pinecone-database/pinecone";
 import { getPdfContent } from "./firebaseUtils";
 import { getChunkedDocsFromPdf } from "./pdfLoader";
 
+/**
+ * Checks to see if the pinecone namespace exists. We don't want to duplicate namespaces.
+ * @param index Pinecone Index, from PINECONE_INDEX_NAME variable
+ * @param namespace string
+ * @returns Boolean
+ */
 async function namespaceExists(
   index: Index<RecordMetadata>,
   namespace: string
@@ -14,6 +20,12 @@ async function namespaceExists(
   return namespaces?.[namespace] !== undefined;
 }
 
+/**
+ * Retrieves the pinecone vectore store from an existing index, as denoted by the PINECONE_INDEX_NAME variable
+ * currently, we only have 1 index!
+ * @param docId firebase document Id
+ * @returns PineconeStore object
+ */
 export async function getExistingVectorStore(docId: string) {
   const pineconeIndex = pc.index(process.env.PINECONE_INDEX_NAME!);
   const embeddings = new OpenAIEmbeddings();
@@ -33,12 +45,19 @@ export async function getExistingVectorStore(docId: string) {
   }
 }
 
+/**
+ * Attempts to reuse the namespace using the pinecone index and ID.
+ * If the namespace does not exist, we download the PDF from firestore, chunk it,
+ * and create a new Pinecone Vector Store from the chunks, then return it
+ * @param docId firebase document ID
+ * @returns the Pinecone Vector Store
+ */
 export async function embedAndStoreDocs(docId: string) {
   try {
     console.log("--- Generating Embeddings for the split documents---");
     const pineconeIndex = pc.index(process.env.PINECONE_INDEX_NAME!);
     const embeddings = new OpenAIEmbeddings();
-    let pineconeVectorStore; // a variable to be assigned later
+    let pineconeVectorStore;
 
     /**
      * RE USE NAMESPACE & EMBEDDINGS
@@ -51,13 +70,14 @@ export async function embedAndStoreDocs(docId: string) {
     if (namespaceAlreadyExists) {
       pineconeVectorStore = await getExistingVectorStore(docId);
       return pineconeVectorStore;
+    } else {
       /**
        * If new namespace:
        * 1. download PDF from firestore via the download URL
        * 2. parse the PDF, split the large document into smaller parts so the model can process it
        * 3. generate vector embeddings & store them in the Pinecone vector store
        */
-    } else {
+
       // download the document (1)
       const downloadedPdf = await getPdfContent(docId);
       // parse, and split the documents (2)
