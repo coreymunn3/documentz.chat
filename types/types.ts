@@ -12,3 +12,9 @@ export type UserDetails = {
   email: string;
   name: string;
 };
+
+export type AiResponseContext = {
+  id: string;
+  pageContent: string;
+  metadata: object;
+};

@@ -18,6 +18,7 @@ import { getExistingVectorStore } from "./vectorStore";
 export const model = new ChatOpenAI({
   model: "gpt-4o-mini",
   temperature: 0,
+  streaming: true,
 });
 
 // Caching setup for retrievers and chains
@@ -121,12 +122,11 @@ export async function generateLangchainCompletion(
 
     console.log(`STEP 6: ${docId}`);
     console.log("--Running the chain with context & conversation--");
-    const reply = await ragChain.invoke({
+    const stream = ragChain.stream({
       chat_history: chatHistoryForLangchain,
       input: sanitizedQuestion,
     });
-
-    return reply;
+    return stream;
   } catch (error) {
     console.error("Error generating Langchain completion: ", error);
     throw new Error("Failed to generate completion");
