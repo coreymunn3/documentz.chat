@@ -32,7 +32,6 @@ const Documents = () => {
   const router = useRouter();
   const { user } = useUser();
   const [documents, setDocuments] = useState<DocumentData[]>([]);
-  console.log(documents);
 
   const [snapshot, loading, error] = useCollection(
     user &&

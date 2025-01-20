@@ -38,7 +38,6 @@ const Chat = ({ id }: { id: string }) => {
         message: currentResponse,
         createdAt: new Date(),
       };
-      console.log("Saving AI response:", aiResponse);
       await saveChatMessage(id, aiResponse);
       // clean up current response and current sources
       setCurrentResponse("");
