@@ -1,6 +1,7 @@
 "use client";
 
 import { createCheckoutSession } from "@/actions/createCheckoutSession";
+import { createStripePortal } from "@/actions/createStripePortal";
 import { Button } from "@/components/ui/button";
 import useSubscription from "@/hooks/useSubscription";
 import getStripe from "@/lib/get-stripejs";
@@ -14,6 +15,7 @@ const PricingPage = () => {
   const { user } = useUser();
   const router = useRouter();
   const { membershipLevel, userLoading } = useSubscription();
+  console.log("my membership", membershipLevel);
   const [isPending, startTransition] = useTransition();
 
   const handleChangeMembership = async () => {
@@ -28,16 +30,21 @@ const PricingPage = () => {
       // load stripe
       const stripe = await getStripe();
       // If the user has a paid membership level, allow them to access the stripe portal
+      // to change/manage their membership level
+      // pro, or any other paid levels (currently only pro)
       if (membershipLevel === "pro") {
-        // access stripe portal
+        console.log("here");
+        const stripePortalUrl = await createStripePortal();
+        return router.push(stripePortalUrl);
+      } else {
+      /**
+       * otherwise create a checkout session & redirect user to that checkout
+       */
+        const sessionId = await createCheckoutSession(userDetails);
+        await stripe?.redirectToCheckout({
+          sessionId,
+        });
       }
-
-      // create a checkout session
-      const sessionId = await createCheckoutSession(userDetails);
-      // redirect the user to stripe checkout
-      await stripe?.redirectToCheckout({
-        sessionId,
-      });
     });
   };
 
