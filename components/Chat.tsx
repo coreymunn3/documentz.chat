@@ -10,6 +10,8 @@ import { collection, orderBy, query } from "firebase/firestore";
 import { db } from "@/firebase";
 import { AiResponseContext, Message } from "@/types/types";
 import ChatMessage from "./ChatMessage";
+import { saveChatMessage } from "@/actions/saveChatMessage";
+import { debounce } from "lodash";
 
 const Chat = ({ id }: { id: string }) => {
   const { user } = useUser();
@@ -18,7 +20,6 @@ const Chat = ({ id }: { id: string }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentResponse, setCurrentResponse] = useState("");
   const [currentSources, setCurrentSources] = useState<AiResponseContext[]>([]);
-  const [isPending, startTransition] = useTransition();
   const bottomChatRef = useRef<HTMLDivElement>(null);
 
   const [snapshot, loading, error] = useCollection(
@@ -28,6 +29,22 @@ const Chat = ({ id }: { id: string }) => {
         orderBy("createdAt", "asc")
       )
   );
+
+  const debouncedSaveResponse = debounce(async () => {
+    if (currentResponse) {
+      const aiResponse: Message = {
+        role: "ai",
+        sources: currentSources.map((s) => s.pageContent),
+        message: currentResponse,
+        createdAt: new Date(),
+      };
+      console.log("Saving AI response:", aiResponse);
+      await saveChatMessage(id, aiResponse);
+      // clean up current response and current sources
+      setCurrentResponse("");
+      setCurrentSources([]);
+    }
+  }, 1000);
 
   /**
    * This useEffect formats every new message, unpacking the role, message and createdAt and combining with the ID
@@ -47,6 +64,14 @@ const Chat = ({ id }: { id: string }) => {
     });
     setMessages(newMessages);
   }, [snapshot]);
+
+  useEffect(() => {
+    debouncedSaveResponse();
+    // clean up
+    return () => {
+      debouncedSaveResponse.cancel();
+    };
+  }, [currentResponse, currentSources, id]);
 
   /**
    * This useEffect scrolls the chat window to the bottom if it is not currently in view
@@ -80,25 +105,6 @@ const Chat = ({ id }: { id: string }) => {
       },
     ]);
 
-    // Ask the question to the model
-    // startTransition(async () => {
-    //   const { success, message } = await askQuestion(id, q);
-
-    //   if (!success) {
-    //     // ...toast
-    //     setMessages((prev) =>
-    //       prev.slice(0, prev.length - 1).concat([
-    //         {
-    //           role: "ai",
-    //           message: "Whoops! An error occurred." + message,
-    //           sources: [],
-    //           createdAt: new Date(),
-    //         },
-    //       ])
-    //     );
-    //   }
-    // });
-
     // ask the question and stream the response
     const aiCompletionUrl = `/api/askQuestion?docId=${encodeURIComponent(
       id
@@ -108,9 +114,8 @@ const Chat = ({ id }: { id: string }) => {
       // Handle streamed responses
       const eventSource = new EventSource(aiCompletionUrl);
       // on message
-      eventSource.onmessage = function (event) {
+      eventSource.onmessage = async function (event) {
         // parse the event data
-        console.log(JSON.parse(event.data));
         const { data, end } = JSON.parse(event.data);
         // if the event stream data object contains parts of the 'answer' add that to the ongoing response
         if (data?.answer) {
@@ -120,11 +125,32 @@ const Chat = ({ id }: { id: string }) => {
         if (data?.context) {
           setCurrentSources(data.context);
         }
-        // if the stream is done...
+        /**
+         * When the stream is done, we need to save the human question and the ai response
+         * we can must save the human question here, because the input has already been cleared
+         *
+         * for the ai response, we must trigger the currentResponse state to save the final full result,
+         * and when that's done, the useEffect above will trigger allowing us to save that full response to the DB as well
+         * NOTE: we are unable to save here bencause the react state has not yet been updated, se if we save here we would get an empty message
+         */
         if (end) {
-          console.log("stream finished");
           eventSource.close();
-          // then, save to database
+          // save human query & ai response to database
+          const humanQuestion: Message = {
+            role: "human",
+            message: q,
+            sources: null,
+            createdAt: new Date(),
+          };
+          await saveChatMessage(id, humanQuestion);
+          ``;
+          // trigger one final state change. The debounced useEffect above will save the AI response
+          // and clear currentResponse after this operation is complete.
+          setCurrentResponse((prev) => prev);
+          try {
+          } catch (error) {
+            console.error("Error with the stream:", error);
+          }
         }
       };
       // on error
@@ -132,14 +158,8 @@ const Chat = ({ id }: { id: string }) => {
         console.error("Error with EventSource:", err);
         eventSource.close();
       };
-      // on open
+      // on open - currently no need for this
       // eventSource.onopen = function () {};
-
-      if (res.ok) {
-        // save the message
-      } else {
-        // send a toast
-      }
     } catch (error) {
       console.error("Error in question ask:", error);
     }
@@ -180,7 +200,7 @@ const Chat = ({ id }: { id: string }) => {
                     message: currentResponse,
                     sources:
                       currentSources.length > 0
-                        ? currentSources.slice(0, 2).map((c) => c.pageContent)
+                        ? currentSources.map((c) => c.pageContent)
                         : null,
                     createdAt: new Date(),
                   }}
@@ -201,12 +221,8 @@ const Chat = ({ id }: { id: string }) => {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask a Question..."
         />
-        <Button type="submit" disabled={isPending || !input}>
-          {isPending ? (
-            <Loader2Icon className="animate-spin text-white" />
-          ) : (
-            "Ask"
-          )}
+        <Button type="submit" disabled={!input}>
+          "Ask"
         </Button>
       </form>
     </div>
