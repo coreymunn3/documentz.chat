@@ -15,7 +15,6 @@ const PricingPage = () => {
   const { user } = useUser();
   const router = useRouter();
   const { membershipLevel, userLoading } = useSubscription();
-  console.log("my membership", membershipLevel);
   const [isPending, startTransition] = useTransition();
 
   const handleChangeMembership = async () => {
@@ -33,13 +32,12 @@ const PricingPage = () => {
       // to change/manage their membership level
       // pro, or any other paid levels (currently only pro)
       if (membershipLevel === "pro") {
-        console.log("here");
         const stripePortalUrl = await createStripePortal();
         return router.push(stripePortalUrl);
       } else {
-      /**
-       * otherwise create a checkout session & redirect user to that checkout
-       */
+        /**
+         * otherwise create a checkout session & redirect user to that checkout
+         */
         const sessionId = await createCheckoutSession(userDetails);
         await stripe?.redirectToCheckout({
           sessionId,
