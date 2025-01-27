@@ -12,16 +12,23 @@ import { AiResponseContext, Message } from "@/types/types";
 import ChatMessage from "./ChatMessage";
 import { saveChatMessage } from "@/actions/saveChatMessage";
 import { debounce } from "lodash";
+import useSubscription from "@/hooks/useSubscription";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const Chat = ({ id }: { id: string }) => {
   const { user } = useUser();
-
+  const router = useRouter();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentResponse, setCurrentResponse] = useState("");
   const [currentSources, setCurrentSources] = useState<AiResponseContext[]>([]);
+  const { messageLimit, membershipLevel } = useSubscription();
   const bottomChatRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * This query returns all of the chat messages given the document ID
+   */
   const [snapshot, loading, error] = useCollection(
     user &&
       query(
@@ -89,6 +96,17 @@ const Chat = ({ id }: { id: string }) => {
     e.preventDefault();
     // prevent empty messages
     if (!input.trim()) return;
+    // make sure user is not over the messaging limit
+    // if so do not proceed
+    const numHumanMessages = messages.filter(
+      (message) => message.role === "human"
+    ).length;
+    if (numHumanMessages >= messageLimit) {
+      toast.error("Messaging Plan Exceeded", {
+        description: `You have already reached the ${messageLimit} allowed messages provided by you ${membershipLevel} plan. Upgrade to send additional messages!`,
+      });
+      return;
+    }
     // get the question and clear the input
     const q = input;
     setInput("");

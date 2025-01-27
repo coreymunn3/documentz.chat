@@ -30,7 +30,20 @@ export default function RootLayout({
           >
             {children}
           </ThemeProvider>
-          <Toaster position="top-center" richColors />
+          <Toaster
+            position="top-center"
+            richColors
+            toastOptions={{
+              style: {
+                padding: "1rem",
+                textAlign: "center",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+              },
+            }}
+          />
         </body>
       </html>
     </ClerkProvider>

@@ -6,14 +6,23 @@ import { useUser } from "@clerk/nextjs";
 import { collection, doc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useCollection, useDocument } from "react-firebase-hooks/firestore";
-
-const PRO_DOCUMENT_LIMIT = 20;
-const STARTER_DOCUMENT_LIMIT = 3;
+import {
+  PRO_DOCUMENT_LIMIT,
+  STARTER_DOCUMENT_LIMIT,
+  PRO_MESSAGE_LIMIT,
+  STARTER_MESSAGE_LIMIT,
+} from "@/constants";
 
 function useSubscription() {
   const { user } = useUser();
   const [membershipLevel, setMembershipLevel] = useState(null);
   const [isOverDocumentLimit, setIsOverDocumentLimit] = useState(false);
+  const [documentLimit, setDocumentLimit] = useState<number>(
+    STARTER_DOCUMENT_LIMIT
+  );
+  const [messageLimit, setMessageLimit] = useState<number>(
+    STARTER_MESSAGE_LIMIT
+  );
 
   // listen to the user document snapshot
   const [userSnapshot, userLoading, userError] = useDocument(
@@ -65,9 +74,21 @@ function useSubscription() {
     STARTER_DOCUMENT_LIMIT,
   ]);
 
+  // this useEffect sets the document limit & messages limit given their membership level
+  useEffect(() => {
+    // by default the levels are already set to starter
+    if (membershipLevel === "starter") return;
+    if (membershipLevel === "pro") {
+      setDocumentLimit(PRO_DOCUMENT_LIMIT);
+      setMessageLimit(PRO_MESSAGE_LIMIT);
+    }
+  }, [membershipLevel]);
+
   return {
     membershipLevel,
     isOverDocumentLimit,
+    documentLimit,
+    messageLimit,
     userSnapshot,
     userLoading,
     filesSnapshot,

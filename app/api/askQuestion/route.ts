@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateLangchainCompletion } from "@/lib/langchain";
+import {
+  getChatHistory,
+  getMembershipLevelAndLimits,
+} from "@/lib/firebaseUtils";
 
 /**
  * This route generates the langchain completion given a question and a document ID and streams the response to the client
@@ -10,15 +14,29 @@ import { generateLangchainCompletion } from "@/lib/langchain";
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const { searchParams } = url;
-  console.log(searchParams);
   const docId = searchParams.get("docId");
   const question = searchParams.get("question");
-  console.log(docId, question);
 
   if (!docId || !question) {
     return new NextResponse("Doc Id or Question missing from params", {
       status: 400,
     });
+  }
+
+  // Make sure user is under the messaging limit set for their plan.
+  const { messageLimit, membershipLevel } = await getMembershipLevelAndLimits();
+  const chatHistory = await getChatHistory(docId);
+  const numHumanMessages = chatHistory.filter(
+    (message) => message.role === "human"
+  ).length;
+  if (numHumanMessages >= messageLimit!) {
+    return new NextResponse(
+      JSON.stringify({
+        success: false,
+        message: `${membershipLevel} plan messaging limit of ${messageLimit} exceeded`,
+      }),
+      { status: 403 }
+    );
   }
   // try to generate the langchain completion and get the stream
   try {
