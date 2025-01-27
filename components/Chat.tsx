@@ -84,7 +84,6 @@ const Chat = ({ id }: { id: string }) => {
 
   /**
    * This function runs whenever the user enters and submits a new chat
-   * It optimistically updates the UI with a "thinking" message then attempts to ask the question
    */
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
