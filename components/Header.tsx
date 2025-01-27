@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { SignedIn, UserButton } from "@clerk/nextjs";
 import { FilePlus2 } from "lucide-react";
 import DarkModeToggle from "./DarkModeToggle";
+import UpgradeButton from "./UpgradeButton";
 
 const Header = () => {
   return (
@@ -46,6 +47,8 @@ const Header = () => {
                   <FilePlus2 />
                 </Link>
               </Button>
+              {/* upgrade */}
+              <UpgradeButton />
               {/* dark mode */}
               <DarkModeToggle />
               {/* current account status - pro vs free */}
