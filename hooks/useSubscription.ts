@@ -62,9 +62,8 @@ function useSubscription() {
     if (!filesSnapshot || membershipLevel === null) return;
 
     const numFiles = filesSnapshot.docs.length;
-    const usersLimit = membershipLevel
-      ? PRO_DOCUMENT_LIMIT
-      : STARTER_DOCUMENT_LIMIT;
+    const usersLimit =
+      membershipLevel === "pro" ? PRO_DOCUMENT_LIMIT : STARTER_DOCUMENT_LIMIT;
 
     setIsOverDocumentLimit(numFiles >= usersLimit);
   }, [
