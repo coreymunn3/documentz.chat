@@ -13,6 +13,7 @@ const FileUploader = () => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const { membershipLevel, isOverDocumentLimit, filesLoading } =
     useSubscription();
+  console.log(membershipLevel);
 
   // run this when the upload completes
   const { progress, status, fileId, error, handleUpload } = useUpload();
@@ -46,17 +47,17 @@ const FileUploader = () => {
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     // only handle the upload if we're not over the file limit
-    if (!isOverDocumentLimit && !filesLoading) {
-      startSimulateProgress();
-      // if there's a file, attempt to upload
-      const file = acceptedFiles[0];
-      if (file) {
+    // if there's a file, attempt to upload
+    const file = acceptedFiles[0];
+    if (file) {
+      if (!isOverDocumentLimit && !filesLoading) {
+        startSimulateProgress();
         await handleUpload(file);
+      } else {
+        toast.error(
+          `You have already met or exceeded the document limit of your ${membershipLevel} plan. Upgrade to upload additional documentss`
+        );
       }
-    } else {
-      toast.error(
-        `You have already met or exceeded the document limit of your ${membershipLevel} plan. Upgrade to upload additional documentss`
-      );
     }
   }, []);
   const { getRootProps, getInputProps, isDragActive, isFocused, isDragAccept } =
