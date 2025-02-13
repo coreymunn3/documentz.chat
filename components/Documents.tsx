@@ -44,7 +44,6 @@ const Documents = () => {
   const { membershipLevel, isOverDocumentLimit } = useSubscription();
   const [toDelete, setToDelete] = useState<string | null>(null);
   const [isDeleting, startTransition] = useTransition();
-  console.log(documents);
 
   const [snapshot, loading, error] = useCollection(
     user &&

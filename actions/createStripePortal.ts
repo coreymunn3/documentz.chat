@@ -21,7 +21,6 @@ export async function createStripePortal() {
     customer: userStripeCustomerId,
     return_url: `${getBaseUrl()}/dashboard`,
   });
-  console.log(session.url);
 
   return session.url;
 }
