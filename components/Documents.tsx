@@ -34,6 +34,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { deleteDocument } from "@/actions/deleteDocument";
+import { toast } from "sonner";
 
 const Documents = () => {
   const router = useRouter();
@@ -41,6 +42,9 @@ const Documents = () => {
   const [documents, setDocuments] = useState<DocumentData[]>([]);
   const [open, setOpen] = useState<boolean>(false);
   const { membershipLevel, isOverDocumentLimit } = useSubscription();
+  const [toDelete, setToDelete] = useState<string | null>(null);
+  const [isDeleting, startTransition] = useTransition();
+  console.log(documents);
 
   const [snapshot, loading, error] = useCollection(
     user &&
@@ -49,8 +53,6 @@ const Documents = () => {
         orderBy("createdAt", "desc")
       )
   );
-
-  const [isDeleting, startTransition] = useTransition();
 
   /**
    * format user docs from a snapshot to the actual data
@@ -63,12 +65,32 @@ const Documents = () => {
     }
   }, [snapshot]);
 
+  /**
+   * Router for when Add Document is clicked
+   */
   const handleAddDocument = () => {
     if (isOverDocumentLimit) {
       router.push("/dashboard/upgrade");
     } else {
       router.push("/dashboard/upload");
     }
+  };
+
+  /**
+   * Deletes a document
+   * @param docId string
+   */
+  const handleDeleteDocument = (docId: string) => {
+    startTransition(async () => {
+      try {
+        await deleteDocument(docId);
+      } catch (error) {
+        console.error(error);
+        toast.error("Unable to Delete this Document!");
+      }
+      setOpen(false);
+      setToDelete(null);
+    });
   };
 
   return (
@@ -148,6 +170,7 @@ const Documents = () => {
                     onClick={(e) => {
                       e.stopPropagation();
                       setOpen(true);
+                      setToDelete(doc.id);
                     }}
                   >
                     {isDeleting ? (
@@ -164,34 +187,31 @@ const Documents = () => {
             </TooltipProvider>
 
             {/* alert dialog for deleting */}
-            <AlertDialog open={open} onOpenChange={setOpen}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    Are you sure you want to delete?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete
-                    your document and any related conversations.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setOpen(false)}>
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => {
-                      startTransition(async () => {
-                        await deleteDocument(doc.id);
-                      });
-                      setOpen(false);
-                    }}
-                  >
-                    Yes, Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {toDelete && (
+              <AlertDialog open={open} onOpenChange={setOpen}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you sure you want to delete?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      your document and any related conversations.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setOpen(false)}>
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => handleDeleteDocument(toDelete!)}
+                    >
+                      Yes, Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         </div>
       ))}
