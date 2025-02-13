@@ -11,9 +11,7 @@ import { toast } from "sonner";
 const FileUploader = () => {
   const router = useRouter();
   const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const { membershipLevel, isOverDocumentLimit, filesLoading } =
-    useSubscription();
-  console.log(membershipLevel);
+  const { membershipLevel, isOverDocumentLimit } = useSubscription();
 
   // run this when the upload completes
   const { progress, status, fileId, error, handleUpload } = useUpload();
@@ -45,21 +43,27 @@ const FileUploader = () => {
     return interval;
   };
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    // only handle the upload if we're not over the file limit
-    // if there's a file, attempt to upload
-    const file = acceptedFiles[0];
-    if (file) {
-      if (!isOverDocumentLimit && !filesLoading) {
-        startSimulateProgress();
-        await handleUpload(file);
-      } else {
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      // only handle the upload if we're not over the file limit
+      // if there's a file, attempt to upload
+      if (isOverDocumentLimit) {
         toast.error(
           `You have already met or exceeded the document limit of your ${membershipLevel} plan. Upgrade to upload additional documentss`
         );
+        return;
       }
-    }
-  }, []);
+      const file = acceptedFiles[0];
+      if (file) {
+        if (!isOverDocumentLimit) {
+          startSimulateProgress();
+          await handleUpload(file);
+        }
+      }
+    },
+    [isOverDocumentLimit]
+  );
+
   const { getRootProps, getInputProps, isDragActive, isFocused, isDragAccept } =
     useDropzone({
       onDrop,
@@ -67,6 +71,7 @@ const FileUploader = () => {
         "application/pdf": [".pdf"],
       },
       maxFiles: 1,
+      disabled: isOverDocumentLimit,
     });
 
   const uploadInProgress =
