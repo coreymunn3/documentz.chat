@@ -23,7 +23,6 @@ const ChatMessage = ({ message }: { message: Message }) => {
     message.createdAt instanceof Timestamp
       ? message.createdAt.toDate()
       : message.createdAt;
-  console.log(messageDate);
   // convert message date to relative time
   const relativeMessageDate = DateTime.fromJSDate(messageDate).toRelative();
 
