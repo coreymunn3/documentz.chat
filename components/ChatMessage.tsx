@@ -12,13 +12,23 @@ import {
   AccordionTrigger,
 } from "./ui/accordion";
 import { formattedSourceText } from "@/lib/utils";
+import { DateTime } from "luxon";
+import { Timestamp } from "firebase/firestore";
 
 const ChatMessage = ({ message }: { message: Message }) => {
   const { user } = useUser();
   const isHuman = message.role === "human";
+  // get the created at date for this message - which will be a Firebase Timestamp :/ fuck you firebase
+  const messageDate =
+    message.createdAt instanceof Timestamp
+      ? message.createdAt.toDate()
+      : message.createdAt;
+  console.log(messageDate);
+  // convert message date to relative time
+  const relativeMessageDate = DateTime.fromJSDate(messageDate).toRelative();
 
   return (
-    <div className={`chat ${isHuman ? "chat-end" : "chat-start"}`}>
+    <div className={`chat ${isHuman ? "chat-end" : "chat-start"} mb-2`}>
       <div className="chat-image avatar">
         <div>
           {isHuman ? (
@@ -38,7 +48,6 @@ const ChatMessage = ({ message }: { message: Message }) => {
           )}
         </div>
       </div>
-
       <div
         className={`chat-bubble prose ${
           isHuman && "bg-primary/60 text-white dark:bg-primary"
@@ -55,7 +64,7 @@ const ChatMessage = ({ message }: { message: Message }) => {
           <div>
             <Markdown>{message.message}</Markdown>
             {/* If there are sources, show them to the user for quick reference */}
-            <Accordion type="single" collapsible className="w-full">
+            {/* <Accordion type="single" collapsible className="w-full">
               {message.sources &&
                 message.sources.map((source, index) => (
                   <AccordionItem value={`source-${index}`} key={index}>
@@ -65,10 +74,12 @@ const ChatMessage = ({ message }: { message: Message }) => {
                     </AccordionContent>
                   </AccordionItem>
                 ))}
-            </Accordion>
+            </Accordion> */}
           </div>
         )}
       </div>
+      {/* time sent */}
+      <small className="mt-1 text-slate-400">{relativeMessageDate}</small>
     </div>
   );
 };
