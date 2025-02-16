@@ -49,7 +49,7 @@ const ChatMessage = ({ message }: { message: Message }) => {
       </div>
       <div
         className={`chat-bubble prose ${
-          isHuman && "bg-primary/60 text-white dark:bg-primary"
+          isHuman && "bg-primary/50 dark:bg-primary text-white"
         } ${
           !isHuman &&
           "bg-slate-200 text-black dark:bg-slate-700 dark:text-white"

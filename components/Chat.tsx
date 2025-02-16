@@ -230,15 +230,20 @@ const Chat = ({ id }: { id: string }) => {
       {/* input form to write new message */}
       <form
         onSubmit={handleSubmit}
-        className="flex space-x-2 sticky bottom-0 p-5 bg-primary/25"
+        className="flex space-x-2 sticky bottom-0 p-5 bg-slate-100 dark:bg-primary"
       >
         <Input
+          className="border-slate-300 hover:border-slate-500 dark:border-slate-400 dark:hover:border-slate-300"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask a Question..."
         />
-        <Button type="submit" disabled={!input}>
-          "Ask"
+        <Button
+          type="submit"
+          disabled={!input}
+          className="dark:bg-white dark:text-primary"
+        >
+          Go
         </Button>
       </form>
     </div>
