@@ -11,16 +11,27 @@ export async function setDefaultMembership() {
   auth.protect();
   const { userId } = await auth();
 
+  if (!userId) {
+    console.error("User ID is undefined.");
+    return { success: false };
+  }
+
+  const defaultUserData = {
+    membershipLevel: "starter",
+  };
+
   try {
     // get the user collection
     const userRef = adminDb.collection("users").doc(userId!);
+    const userDoc = await userRef.get();
 
-    // set the default membership level = starter
-    const data = {
-      membershipLevel: "starter",
-    };
-    await userRef.update(data);
-
+    if (!userDoc.exists) {
+      // if the user DOESNT exist, create it with the default membership level
+      await userRef.set(defaultUserData);
+    } else {
+      // if the user DOES exist for some reason, updated the uesr to membership level = starter
+      await userRef.update(defaultUserData);
+    }
     return { success: true };
   } catch (error) {
     console.error(error);
