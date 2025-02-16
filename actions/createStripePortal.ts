@@ -13,6 +13,7 @@ export async function createStripePortal() {
   const user = await adminDb.collection("users").doc(userId!).get();
   const userStripeCustomerId = user.data()?.stripeCustomerId;
 
+  // extremely unlikly we will ever get here
   if (!userStripeCustomerId) {
     throw new Error("User does not have a Stripe customer ID currently set up");
   }

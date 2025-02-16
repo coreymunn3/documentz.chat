@@ -7,7 +7,14 @@ import { UserDetails } from "@/types/types";
 import { auth } from "@clerk/nextjs/server";
 
 export async function createCheckoutSession(userDetails: UserDetails) {
+  auth.protect();
+  // get the user's ID
   const { userId } = await auth();
+
+  // later on we will need the pro tier price ID from env vars, make sure they are present
+  if (!process.env.STRIPE_PRO_TIER_PRICE_ID) {
+    throw new Error("Env vars Missing STRIPE_PRO_TIER_PRICE_ID");
+  }
 
   // check to see if the user already has a stripe customer ID or not
   let stripeCustomerId;
@@ -24,10 +31,15 @@ export async function createCheckoutSession(userDetails: UserDetails) {
       },
     });
 
-    // store the customer ID in firebase
-    await adminDb.collection("users").doc(userId!).update({
-      stripeCustomerId: customer.id,
-    });
+    // store the customer ID in firebase - set with merge true is like upsert
+    await adminDb.collection("users").doc(userId!).set(
+      {
+        stripeCustomerId: customer.id,
+      },
+      {
+        merge: true,
+      }
+    );
 
     stripeCustomerId = customer.id;
   }
@@ -37,7 +49,7 @@ export async function createCheckoutSession(userDetails: UserDetails) {
     payment_method_types: ["card"],
     line_items: [
       {
-        price: "price_1QgcOpCvkCpGNGFhHOJvkDnz",
+        price: process.env.STRIPE_PRO_TIER_PRICE_ID,
         quantity: 1,
       },
     ],
