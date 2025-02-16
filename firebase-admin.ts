@@ -2,7 +2,11 @@ import { initializeApp, getApps, App, getApp, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 
-const serviceKey = require("@/service_key.json");
+const serviceKeyDev = require("@/service_key_dev.json");
+const serviceKeyProd = require("@/service_key_prod.json");
+
+const serviceKey =
+  process.env.NODE_ENV === "production" ? serviceKeyProd : serviceKeyDev;
 
 let app: App;
 
