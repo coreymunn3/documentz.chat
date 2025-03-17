@@ -11,7 +11,6 @@ export async function getChunkedDocsFromPdf(documentBlob: Blob) {
   try {
     const loader = new PDFLoader(documentBlob);
     const doc = await loader.load();
-    console.log("docs", doc);
 
     console.log("--Splitting the document into smaller parts--");
     const splitter = new RecursiveCharacterTextSplitter({
@@ -20,7 +19,7 @@ export async function getChunkedDocsFromPdf(documentBlob: Blob) {
       chunkOverlap: 200,
     });
     const chunkDocs = await splitter.splitDocuments(doc);
-    console.log("split docs ", chunkDocs);
+
     console.log(`--Split document into ${chunkDocs.length} parts--`);
     return chunkDocs;
   } catch (error) {

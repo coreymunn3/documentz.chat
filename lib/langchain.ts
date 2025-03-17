@@ -24,7 +24,6 @@ export const model = new ChatOpenAI({
 // Caching setup for retrievers and chains
 const retrieverCache = new Map<string, any>();
 const chainCache = new Map<string, any>();
-console.log(chainCache);
 
 function langchainFormattedChatHistory(chatHistory: DocumentData[]) {
   const chatHistoryForLangchain = chatHistory.map((chat) =>
