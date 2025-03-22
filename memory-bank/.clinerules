@@ -1,0 +1,194 @@
+# Documentz.chat Project Rules and Patterns
+
+## Code Style and Conventions
+
+### TypeScript Patterns
+
+- Use TypeScript for all new code
+- Define explicit types for function parameters and return values
+- Use interfaces for complex object structures
+- Prefer type inference where types are obvious
+- Use optional chaining (`?.`) and nullish coalescing (`??`) for safer code
+
+### React Patterns
+
+- Use functional components with hooks
+- Prefer server components where possible in Next.js App Router
+- Use client components only when necessary (interactive elements, hooks)
+- Extract reusable logic into custom hooks
+- Keep components focused on a single responsibility
+- Use composition over inheritance
+
+### File Structure
+
+- Group files by feature/module rather than by type
+- Keep related files close to each other
+- Use index files for cleaner imports
+- Follow Next.js App Router conventions for page organization
+
+### Naming Conventions
+
+- PascalCase for React components and type definitions
+- camelCase for variables, functions, and instances
+- Use descriptive, intention-revealing names
+- Prefix boolean variables with "is", "has", or "should"
+- Prefix event handlers with "handle" or "on"
+
+## Project-Specific Patterns
+
+### Authentication Flow
+
+- Use Clerk for all authentication operations
+- Check authentication status with `auth.protect()` in server components
+- Use `useUser()` hook for client-side authentication state
+- Handle unauthenticated states with appropriate redirects
+
+### Firebase Integration
+
+- Use Firebase hooks for real-time data
+- Structure Firestore collections as: `users/{userId}/files/{fileId}`
+- Structure chat collections as: `users/{userId}/files/{fileId}/chat/{messageId}`
+- Use Firebase Admin SDK for server-side operations
+- Use Firebase Storage for document storage
+
+### AI and Vector Operations
+
+- Use LangChain for document processing and AI interactions
+- Chunk documents appropriately for vector storage
+- Use Pinecone namespaces to separate document embeddings
+- Cache vector stores and chains where possible for performance
+- Handle streaming responses for real-time chat interactions
+
+### Subscription Management
+
+- Use Stripe for all payment processing
+- Implement webhook handlers for subscription events
+- Store subscription status in Firestore
+- Check subscription limits before allowing premium actions
+- Provide clear upgrade paths for users hitting limits
+
+## Critical Implementation Paths
+
+### Document Upload Flow
+
+1. User selects PDF file via Dropzone
+2. File is uploaded to Firebase Storage
+3. File metadata is saved to Firestore
+4. PDF is processed and text is extracted
+5. Text is chunked and embedded via OpenAI
+6. Embeddings are stored in Pinecone
+7. User is redirected to the document view
+
+### Chat Interaction Flow
+
+1. User enters question in chat interface
+2. Question is sent to API route
+3. API retrieves relevant document chunks via vector search
+4. LangChain combines chunks with the question
+5. OpenAI generates a response
+6. Response is streamed back to the client
+7. Chat history is updated in Firestore
+
+### Subscription Upgrade Flow
+
+1. User clicks upgrade button
+2. User details are sent to Stripe
+3. Stripe Checkout session is created
+4. User completes payment on Stripe
+5. Webhook receives payment confirmation
+6. User's subscription status is updated in Firestore
+7. User gains access to premium features
+
+## Known Challenges and Solutions
+
+### Large Document Processing
+
+- **Challenge**: Processing large PDFs can be slow
+- **Solution**: Implement progress indicators and background processing
+
+### Vector Search Performance
+
+- **Challenge**: Vector search can be slow for complex queries
+- **Solution**: Optimize chunking strategy and implement caching
+
+### Subscription Limit Enforcement
+
+- **Challenge**: Ensuring users don't exceed their plan limits
+- **Solution**: Check limits on both client and server side before operations
+
+### Error Handling
+
+- **Challenge**: Graceful recovery from API failures
+- **Solution**: Implement comprehensive error boundaries and fallback UIs
+
+## User Preferences and Workflow
+
+### Development Workflow
+
+- Run development server on port 3030 with `npm run dev`
+- Use environment variables from `.env.development` for local development
+- Test Stripe integration with test mode credentials
+- Use Firebase emulator for local testing when possible
+
+### Deployment Workflow
+
+- Deploy to Vercel for production
+- Use environment variables from `.env.production` for production
+- Set up proper redirects for authentication flows
+- Configure Stripe webhooks for production environment
+
+## Tool Usage Patterns
+
+### Next.js
+
+- Leverage App Router for improved routing and layouts
+- Use server components for data fetching where possible
+- Implement server actions for secure operations
+- Use client components only when necessary
+
+### Firebase
+
+- Use Firebase hooks for real-time data
+- Implement security rules for data protection
+- Structure collections with user isolation in mind
+- Use batch operations for related updates
+
+### Stripe
+
+- Use Stripe Checkout for payment processing
+- Implement webhook handlers for subscription events
+- Use Stripe Customer Portal for subscription management
+- Test with Stripe test mode before production
+
+### OpenAI
+
+- Use GPT-4o-mini for balance of performance and cost
+- Implement streaming responses for better user experience
+- Handle rate limiting and API errors gracefully
+- Monitor token usage for cost management
+
+## Evolution of Project Decisions
+
+### Authentication Provider
+
+- **Initial Decision**: Firebase Authentication
+- **Current Decision**: Clerk
+- **Rationale**: Better user management features and easier integration
+
+### Vector Database
+
+- **Initial Decision**: Basic text search
+- **Current Decision**: Pinecone vector database
+- **Rationale**: Improved semantic search capabilities and scalability
+
+### Subscription Model
+
+- **Initial Decision**: Single paid tier
+- **Current Decision**: Free tier + Pro tier
+- **Rationale**: Better user acquisition and conversion strategy
+
+### AI Model
+
+- **Initial Decision**: GPT-3.5 Turbo
+- **Current Decision**: GPT-4o-mini
+- **Rationale**: Better performance for document understanding at reasonable cost
