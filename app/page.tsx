@@ -136,7 +136,7 @@ export default function Home() {
             <div className="px-6 lg:px-8">
               <Image
                 alt="app screenshot"
-                src={"https://i.imgur.com/VciRSTI.jpeg"}
+                src={"/sample.png"}
                 width={2400}
                 height={1400}
                 className="rounded-xl shadow-2xl ring-1 ring-gray-900"
