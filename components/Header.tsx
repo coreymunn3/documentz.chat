@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "./ui/button";
 import { SignedIn, UserButton } from "@clerk/nextjs";
 import { FilePlus2 } from "lucide-react";
@@ -12,10 +13,13 @@ const Header = () => {
     <div className="p-4 border-b border-b-slate-200 bg-slate-50 dark:border-b-slate-700 dark:bg-primary/5">
       <div className="flex justify-between mx-auto max-w-6xl">
         <Link href="/dashboard">
-          <p className="text-2xl font-light">
-            Documentz
-            <span className="text-primary font-bold italic">{`.chat`}</span>
-          </p>
+          <div className="flex items-center space-x-2">
+            <Image src="/logo.svg" alt="Logo" width={25} height={25} />
+            <p className="text-2xl font-light">
+              Documentz
+              <span className="text-primary font-bold italic">{`.chat`}</span>
+            </p>
+          </div>
         </Link>
 
         <div>
