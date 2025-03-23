@@ -1,10 +1,10 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { FormEvent, useEffect, useRef, useState, useTransition } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Loader2Icon } from "lucide-react";
+import { Loader2Icon, SparklesIcon } from "lucide-react";
 import { useCollection } from "react-firebase-hooks/firestore";
 import { collection, orderBy, query } from "firebase/firestore";
 import { db } from "@/firebase";
@@ -25,6 +25,20 @@ const Chat = ({ id }: { id: string }) => {
   const [currentSources, setCurrentSources] = useState<AiResponseContext[]>([]);
   const { messageLimit, membershipLevel } = useSubscription();
   const bottomChatRef = useRef<HTMLDivElement>(null);
+
+  // Suggested questions for users to ask about the document
+  const suggestedQuestions = [
+    "What is the main topic of this document?",
+    "Can you summarize this document?",
+    "What are the key points in this document?",
+    "Who is the author of this document?",
+    "When was this document created?",
+  ];
+
+  // Handle suggestion click
+  const handleSuggestionClick = (question: string) => {
+    setInput(question);
+  };
 
   /**
    * This query returns all of the chat messages given the document ID
@@ -193,15 +207,31 @@ const Chat = ({ id }: { id: string }) => {
           <div className="p-4">
             <div>
               {messages.length === 0 && (
-                <ChatMessage
-                  message={{
-                    id: "test",
-                    role: "ai",
-                    message: "Ask me Anything about the document!",
-                    sources: null,
-                    createdAt: new Date(),
-                  }}
-                />
+                <>
+                  <ChatMessage
+                    message={{
+                      id: "test",
+                      role: "ai",
+                      message: "Ask me Anything about the document!",
+                      sources: null,
+                      createdAt: new Date(),
+                    }}
+                  />
+                  <div className="mt-4 mb-6 flex flex-wrap gap-2 justify-center">
+                    {suggestedQuestions.map((question, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSuggestionClick(question)}
+                        className="mb-2  hover:bg-primary/20 rounded-full"
+                      >
+                        <SparklesIcon className="h-4 w-4 text-primary" />{" "}
+                        {question}
+                      </Button>
+                    ))}
+                  </div>
+                </>
               )}
               {messages.length > 0 &&
                 messages.map((message) => (
